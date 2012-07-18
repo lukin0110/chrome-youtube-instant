@@ -1,0 +1,23 @@
+{
+  "name": "YouTube Instant",
+  "version": "0.8.1",
+  "default_locale": "en",
+  "minimum_chrome_version": "10",
+  "icons": { "128":"img/Youtube_128x128.png", "48":"img/Youtube_48x48.png", "32":"img/Youtube_32x32.png", "16":"img/Youtube_16x16.png" },
+  "description": "Loads the results instantly while you're typing. Magic keyword: 'yt'",
+  "background_page": "background.html",
+  "options_page": "options.html",
+  "omnibox": { "keyword" : "yt" },
+  "browser_action": {
+      "default_title": "YouTube Instant",
+      "default_icon": "img/Youtube_19x19.png",
+      "popup": "popup.html"
+  },
+  "permissions": [
+    "tabs",
+	"contextMenus",
+    "http://www.youtube.com/*",
+	"*://gdata.youtube.com/"
+  ]
+}
+

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns:og="http://opengraphprotocol.org/schema/" xmlns:fb="http://www.facebook.com/2008/fbml" id="yt">
+<head>
+	<meta charset="utf-8"/>
+    <title>YouTube Instant</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css"/> 
+    <script src="js/jquery-1.6.2.min.js"></script>
+	<!--<script src="js/test/search.js"></script>-->
+    <script src="js/bananajs-0.1.min.js"></script>
+    <script src="js/youtube.js"></script>
+</head>
+<body onclick="YT.bodyClick();">
+<div id="ytInstantSpacer" style="display:none"></div>
+<div id="ytInstant">
+    <div id="ytInstantInner">
+    	<div class="sizer">
+    		<h1>Search results for <strong id="ytQuery"></strong></h1>
+        	<p class="results">About <strong id="ytResults">0</strong> results</p>
+        	<div class="config"><a href="javascript:YT.navigate('options.html');"><button class="configBtn" title="Settings" onclick="YT.navigate('options.html')"></button>Settings</a></div>
+        </div>	
+        <div id="ytPlayerWrapper" class="hide"><div id="ytPlayer"></div></div>
+        <div class="sizer"><ul class="videos"></ul></div>
+    </div>
+</div>
+
+<script>
+	YT.render();
+
+	if(YT.getUrlVars().spacer == "true")
+	{
+	 	$("#ytInstantSpacer").show();	
+	}
+	
+	//chrome.extension.getBackgroundPage().console.log("Url = " + window.location);
+</script>
+</body>
+</html>
+

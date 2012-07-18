@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en">
+<head>
+	<meta charset="utf-8"/>
+    <title>Background - YouTube Instant</title>
+    <script src="js/jquery-1.6.2.min.js"></script>
+    <script src="js/bananajs-0.1.min.js"></script>
+    <script src="js/youtube.js"></script>
+</head>
+<body>
+<script>
+
+	chrome.contextMenus.create({
+		"title" : "Search on YouTube",
+		"type" : "normal",
+		"contexts" : ["selection"],
+		"onclick" : YT.contextMenuSearch
+	});
+	  
+	
+	//window.localStorage.clear();
+    var currentRequest = null;
+	var breakLoad = false;
+	var breakLoadCache = false;
+	
+    chrome.omnibox.onInputChanged.addListener(function(text, suggest_callback)
+	{	
+		if (!text)
+		{
+			return;
+		}
+		
+		// The ajax calls are async.  The users can have loaded the result already from the cache
+		// or another request could have been faster.  So we need to block slowly request once 
+		// the result is shown
+		breakLoad = false;
+		breakLoadCache = false;
+		YT.navigate("instant.html?spacer=true");
+		
+		try
+		{	 
+			if(localStorage.hasUnexpired('yt_'+text))
+			{
+				breakLoadCache = true;
+				var results = localStorage.getObject('yt_'+text);
+				
+				suggest_callback(results);	
+				
+				localStorage.setObject('last', text);
+				YT.navigate("instant.html?spacer=true&autoplay=false");
+				
+				console.log("2 cache " + text);
+				//console.log(JSON.stringify(results));
+			}
+			else
+			{
+				if(currentRequest != null) 
+				{
+				  currentRequest.onreadystatechange = null;
+				  currentRequest.abort();
+				  currentRequest = null;
+				}
+	
+				currentRequest = YT.omniboxSearch(text, function(jsonStr) 
+				{
+					var jsonObj = eval('(' + jsonStr + ')');
+					var results = [];
+					var arr = text.split(' ');
+	
+					// Example data
+					// http://gdata.youtube.com/feeds/api/videos?q=Jenni&max-results=5&v=2&alt=jsonc
+					for(var i=0, entry;i<5 && (entry = jsonObj.data.items[i]);i++)
+					{
+						var url = decodeURIComponent(entry.player['default'].replace("&feature=youtube_gdata_player", ""));
+						var url2 = url.replace("&", "&amp;");
+						var title = entry.title;
+	
+						// The YT.omniboxtHighlight highlights the matches with ##match## instead of with the <match> tag
+						// the YT.escapeXml function will replace the < and > characters 
+						for (var j = 0; j < arr.length; j++) 
+						{
+							title = YT.omniboxtHighlight(title, arr[j]);
+						}
+	
+						
+						title = YT.escapeXml(title);
+						title = title.replace(/&lt;match&gt;/g, "<match>").replace(/&lt;\/match&gt;/g, "</match>");
+	
+						results.push({
+							content: url2,
+							description: "<dim>" + title + "</dim> - <url>" + url + "</url>"
+						});
+					}
+					
+					// Store the result in the cache
+					localStorage.setObject('yt_'+text, results);
+					localStorage.setObject('ytj_'+text, jsonObj);
+					
+					// Show the suggest if the result is not yet loaded
+					if(!breakLoad && !breakLoadCache)
+					{
+						localStorage.setObject('last', text);
+						suggest_callback(results);
+					}
+					
+					// Show the result if the result is not yet loaded
+					if(!breakLoadCache)
+					{
+						localStorage.setObject('last', text);
+						var autoplay = (breakLoad && YT.getOption("autoPlay",false)) ? "true" : "false";
+						YT.navigate("instant.html?t=b&spacer=" + (breakLoad ? "false":"true") + "&autoplay=" + autoplay);
+					}
+					
+					var autoplay = YT.getOption("autoPlay",false) ? "true" : "false";
+					//console.log("2 = " + text + ", " + breakLoad + "," + autoplay);
+				});
+			}
+			
+		}
+		catch(e){console.log(e);}
+    });
+    
+
+	
+    chrome.omnibox.onInputEntered.addListener(function(text) 
+	{
+		var stripped_text = text.strip();
+		
+        if (!stripped_text) 
+		{
+            return;
+        }
+
+        if (stripped_text.startsWith("http://") || stripped_text.startsWith("https://"))
+		{
+            YT.navigate(stripped_text);
+            return;
+        }
+		
+		breakLoad = true;
+		var autoplay = YT.getOption("autoPlay", false) ? "true" : "false";
+		YT.navigate("instant.html?autoplay=" + autoplay);
+		//console.log("1.1 = " + text);
+    });
+	
+	
+	chrome.omnibox.onInputCancelled.addListener(function()
+	{
+		breakLoad = true;
+		var autoplay = YT.getOption("autoPlay", false) ? "true" : "false";
+		YT.navigate("instant.html?autoplay=" + autoplay);
+		//console.log("1.2 = " + text);
+    });
+	
+</script>
+</body>
+</html>
+
+

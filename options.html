@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns:og="http://opengraphprotocol.org/schema/" xmlns:fb="http://www.facebook.com/2008/fbml" id="yt">
+<head>
+	<meta charset="utf-8"/>
+    <title>Settings - YouTube Instant</title>
+    <link rel="stylesheet" href="css/style.css" type="text/css"/> 
+    <script src="js/jquery-1.6.2.min.js"></script>
+    <script src="js/bananajs-0.1.min.js"></script>
+    <script src="js/youtube.js"></script>
+</head>
+<body>
+<div id="ytInstant">
+    <div id="ytInstantInner" class="sizer">
+    	<h1>Settings - YouTube Instant</h1>
+		<div class="success mt20 hide" id="opt_success">Options saved</div>
+
+		<div class="option clearfix">
+        	<label for="opt_region">Feed region (Popular, Trending, ...)</label>
+            <select name="region" id="opt_region" style="width:150px;">
+                <option value="">The whole world</option>
+				<option value="AR">Argentina</option>
+				<option value="AU">Australia</option>
+				<option value="BR">Brazil</option>
+				<option value="CA">Canada</option>
+				<option value="CZ">Czech Republic</option>
+				<option value="FR">France</option>
+				<option value="DE">Germany</option>
+				<option value="GB">Great Britain</option>
+				<option value="HK">Hong Kong</option>
+				<option value="IN">India</option>
+				<option value="IE">Ireland</option>
+				<option value="IL">Israel</option>
+				<option value="IT">Italy</option>
+				<option value="JP">Japan</option>
+				<option value="MX">Mexico</option>
+				<option value="NL">Netherlands</option>
+				<option value="NZ">New Zealand</option>
+				<option value="PL">Poland</option>
+				<option value="RU">Russia</option>
+				<option value="ZA">South Africa</option>
+				<option value="KR">South Korea</option>
+				<option value="ES">Spain</option>
+				<option value="SE">Sweden</option>
+				<option value="TW">Taiwan</option>
+				<option value="US">United States</option>
+            </select>
+        </div>
+        
+        <div class="option clearfix">
+        	<label for="opt_auto">Play first video instantly</label>
+            <input type="checkbox" name="automatic" id="opt_auto"/>
+        </div>
+        
+        <div class="option">
+        	<label>Clear cache</label>
+            <a href="javascript:clear();">clear</a>
+        </div>
+        
+        <div class="option save">
+        	<button class="button" type="submit" id="opt_save">Save</button>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+
+	$(document).ready(function(){
+		
+		$("#opt_save").click(function()
+		{
+			$("#opt_success").show();
+			setTimeout("$('#opt_success').fadeOut('slow')", 2000);
+			
+			var options = {};
+			
+			options['regionIso'] = $("#opt_region").val();
+			options['autoPlay'] = $("#opt_auto").is(':checked');
+			
+			YT.saveOptions(options);
+			return false;	
+		});
+				
+		initialize();			
+	});
+
+
+	function initialize()
+	{
+		var options = YT.getOptions();
+		$("#opt_region").val(options['regionIso']);
+		$("#opt_auto").attr("checked", options['autoPlay']);
+	}
+	
+	function clear()
+	{
+		window.localStorage.clear();	
+	}
+	
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+

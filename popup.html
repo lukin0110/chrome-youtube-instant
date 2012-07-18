@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" id="yt">
+<head>
+	<meta charset="utf-8"/>
+    <title>Feeds - YouTube Instant</title>
+    <meta name="description" content="YouTube Suggest for searching directly from the Omnibox, magical keyword: 'yt'"/>
+	<link rel="stylesheet" href="css/style.css" type="text/css"/> 
+    <script src="js/jquery-1.6.2.min.js"></script>
+    <!--<script src="js/test/feed.js"></script>-->
+    <script src="js/bananajs-0.1.min.js"></script>
+    <script src="js/youtube.js"></script>
+</head>
+<body>
+<div id="ytPopup">
+    <ul class="tabs float" id="popupTabs">
+        <li><a href="javascript:void(0)" onclick="return YT.tabClick(this,'most_popular')" class="active">Popular</a></li>
+        <li><a href="javascript:void(0)" onclick="return YT.tabClick(this,'on_the_web')">Trending</a></li>
+        <li><a href="javascript:void(0)" onclick="return YT.tabClick(this,'recently_featured')">Featured</a></li>
+        <li><a href="javascript:void(0)" onclick="return YT.tabClick(this,'most_shared')">Most Shared</a></li>
+        <li><a href="javascript:void(0)" onclick="return YT.tabClick(this,'most_viewed')">Most Viewed</a></li>
+        <li><a href="javascript:void(0)" onclick="return YT.tabClick(this,'most_recent')">Recent</a></li>
+    </ul>
+    <button class="configBtn" title="Settings" onclick="YT.navigate('options.html', true)"></button>
+    
+	<ul class="videos loading" id="most_popular"></ul>
+    <ul class="videos loading hide" id="on_the_web"></ul>
+    <ul class="videos loading hide" id="recently_featured"></ul>
+    <ul class="videos loading hide" id="most_shared"></ul>
+    <ul class="videos loading hide" id="most_viewed"></ul>
+    <ul class="videos loading hide" id="most_recent"></ul>
+</div>	
+
+<script>
+
+	YT.tabClick = function(element, id)
+	{
+		$("#popupTabs a").removeClass("active");
+		$(element).addClass("active");
+		
+		YT.popupLoad(id);
+	};
+	
+	
+	/**
+	 * Later on we'll store the current active tab and open it again when the popup becomes active
+	 */
+	YT.popupInit = function()
+	{
+		//Set timeout is used because for some reason it an ajax call is executed immediatly the popup loading blocks
+		//i want the show the popup immediatly and show a loading image there
+		setTimeout("YT.popupLoad('most_popular')",5);
+	};
+	
+	
+	/**
+	 * http://code.google.com/apis/youtube/2.0/reference.html#Playlist_feed 
+	 * http://gdata.youtube.com/feeds/api/videos?q=" + query + "&max-results=10&v=2&alt=jsonc
+	 *
+	 * https://gdata.youtube.com/feeds/api/standardfeeds/most_popular
+	 * https://gdata.youtube.com/feeds/api/standardfeeds/recently_featured
+	 * https://gdata.youtube.com/feeds/api/standardfeeds/most_viewed
+	 * https://gdata.youtube.com/feeds/api/standardfeeds/most_recent
+	 */
+	YT.popupLoad = function(feedId)
+	{
+		$(".videos").hide();
+		$("#" + feedId).addClass("loading");
+		$("#" + feedId).show();
+		
+		var region = YT.getOption("regionIso", "");
+		
+		if(!YT.isEmpty(region))
+		{
+			region += "/";	
+		}
+
+		if(localStorage.hasUnexpired('ytfeed_' + region + feedId))
+		{
+			var data = localStorage.getObject('ytfeed_' + region + feedId);
+			YT.popupResults(data, feedId);
+		}
+		else
+		{
+
+			
+			var params = 
+			{
+				url:"http://gdata.youtube.com/feeds/api/standardfeeds/" + region + feedId + "?max-results=10&v=2&alt=jsonc",
+				type:'GET',
+				dataType: 'json',
+				success:function(data)
+				{
+					localStorage.setObject('ytfeed_' + region + feedId, data);
+					YT.popupResults(data, feedId);
+				},
+				headers:{"GData-Version":"2"}
+			};	
+			
+			$.ajax(params);
+		}
+
+		
+
+		//YT.popupResults(youtubeTest, feedId);
+	};
+	
+	
+	YT.popupResults = function(data, feedId)
+	{
+		//alert(JSON.stringify(data));
+		$("#" + feedId).removeClass("loading");
+		$("#" + feedId).html("");
+		var array = data.data.items;
+		
+		for(var i=0;i<array.length;i++)
+		{
+			var entry = array[i];
+			var link = entry.player.default.replace("https://", "http://");
+			
+			try 
+			{
+				viewCount = entry.viewCount.format("0,000");
+			}
+			catch(e)
+			{
+				viewCount = 0;
+			}
+			
+			var li = "<li class='clearfix'><a href='javascript:YT.navigate(\"" + link + "\", true);' class='thumb left shadow'>";
+			li+="<img src='" + entry.thumbnail.sqDefault + "' width='90'/><span>" + YT.formatVideoLength(entry.duration) + "</span></a>";
+			li+="<div class='left' style='width:250px;margin-left:10px;'><a href='javascript:YT.navigate(\"" + link + "\", true);'>" + entry.title + "</a>";
+			li+= "<p class='desc'>" + entry.description + "</p>";
+			li+= "<p class='meta'>by <a href='javascript:YT.navigate(\"http://www.youtube.com/user/" + entry.uploader + "\", true);'>" + entry.uploader + "</a> | " + YT.formatTimeSince(entry.uploaded);
+			li+= " | <strong>" + viewCount + " views</strong></p>";
+			
+			li+="</li>";
+			
+			$("#" + feedId).append(li);
+		}
+	};
+	
+
+
+	YT.popupInit();
+</script>
+
+</body>
+</html>
+
+
